@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Employee {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(EMPLOYEE)
+  department   Department @relation(fields: [departmentId], references: [id])
+  departmentId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  assignedTasks Task[]        @relation("EmployeeTask")
+}
+
+model Admin {
+  id           String     @id @default(cuid())
+  name         String
+  email        String     @unique
+  password     String
+  role         Role       @default(ADMIN)
+  department   Department @relation(fields: [departmentId], references: [id])
+  departmentId String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  tasks        Task[]     @relation("TaskCreatedBy")
+}
+
+model Task {
+  id          String     @id @default(cuid())
+  title       String
+  description String
+  status      Status     @default(PENDING)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  assignedBy  Admin      @relation("TaskCreatedBy", fields: [adminId], references: [id])
+  adminId     String
+  assignedTo  String
+  assignee    Employee?  @relation("EmployeeTask", fields: [assignedTo], references: [id])
+
+}
+model Department {
+  id        String     @id @default(cuid())
+  name      String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  employees Employee[]
+  admins    Admin[]
+}
+
+
+enum Role {
+  ADMIN
+  EMPLOYEE
+}
+
+enum Status {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+}
